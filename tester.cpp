@@ -4,65 +4,98 @@
 #include <opencv2/features2d.hpp>
 #include <opencv2/imgproc.hpp>
 #include <iostream>
-
+#include <math.h>
+#include <string>
 
 int main(){
 
-    cv::VideoCapture cap(0);
+    cv::VideoCapture cap(1);
 
     for(;;){
-        cv::Mat src,blurred,canny,thresh,hsv,filtered,cont,done;
-        std::vector< std::vector<cv::Point> > contours; //contour vector
+        cv::Mat src,srcGray,blurred,canny,thresh,hsv,filtered,cont,done;
+        std::vector< std::vector<cv::Point> > contours;
+        std::vector< std::vector<cv::Point> > ThreshContours;
         std::vector<cv::Vec4i> heirarchy;
         cap>>src;
         //src = cv::imread("/home/chinmaya/Desktop/balls1.jpg");
-        //cv::resize(src,src,cv::Size(720,1080));
+        cv::resize(src,src,cv::Size(640,480));
 
         //Uses thresh or filtering
-        /*cv::cvtColor(src,src,CV_BGR2GRAY);
-        cv::blur(src,blurred,cv::Size(49,51));
-        cv::threshold(blurred,thresh,150,255,CV_THRESH_BINARY);
-        filtered = thresh;*/
-
+        //cv::cvtColor(src,src,CV_BGR2GRAY);
+        //cv::blur(src,blurred,cv::Size(49,51));
+        //cv::threshold(blurred,thresh,150,255,CV_THRESH_BINARY);
+        //filtered = thresh;
+        hsv = src.clone();
+        cv::cvtColor(src,srcGray,CV_BGR2GRAY);
         //Uses HSV for filtering
         cv::cvtColor(src,hsv,CV_BGR2HSV);
-        cv::blur(hsv,blurred,cv::Size(9,9));
-        cv::inRange(blurred,cv::Scalar(30,75,100),cv::Scalar(100,160,255),filtered);
+        cv::blur(hsv,blurred,cv::Size(13,13));
 
-        //Finding and drawing contours
+        cv::inRange(hsv,cv::Scalar(34,23,181),cv::Scalar(48,218,255),filtered);
+
+        cv::threshold(srcGray,thresh,221,255,CV_THRESH_BINARY);
+
+        done = src.clone();
+
+        cv::findContours(thresh,ThreshContours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE,cv::Point(0,0));
+
+        cv::drawContours(done,ThreshContours,-1,cv::Scalar(0,0,0),-1);
+
+
+        std::vector<cv::Point> largest;
+
+
+
+
+
         cv::findContours(filtered,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE,cv::Point(0,0));
         cont = cv::Mat::zeros(filtered.size(),CV_8UC1);
         cv::drawContours(cont,contours,-1,cv::Scalar(255,255,255),1);
-        //cv::HoughCircles(cont,foundCircles,CV_HOUGH_GRADIENT,1,1,100,200,0,0);
+
 
         std::vector< std::vector<cv::Point> > contours_poly( contours.size() );
         std::vector<cv::Rect> boundRect( contours.size() );
         std::vector<cv::Point2f> center( contours.size() );
         std::vector<float> radius( contours.size() );
 
-        //find
+
         for( int i = 0; i < contours.size(); i++ ){
             cv::approxPolyDP( cv::Mat(contours[i]), contours_poly[i], 3, true );
             boundRect[i] = boundingRect( cv::Mat(contours_poly[i]) );
             cv::minEnclosingCircle( (cv::Mat)contours_poly[i], center[i],radius[i]);
         }
 
-        done = src.clone();
+
+
+
+
+        std::string text;
 
         for( int i = 0; i< contours.size(); i++ ){
+            if(cv::contourArea(contours[i])>650)
             cv::rectangle( done, boundRect[i].tl(), boundRect[i].br(), cv::Scalar(255,255,255),2 );
+            text = std::to_string(i);
+            //cv::putText(done,)
         }
-    //show original
+
+
+
+
+
+        int circles = contours.size()-1;
+
+
+        //show original
         cv::namedWindow("Original");
         cv::imshow("Original",src);
 
         //show HSV
-        cv::namedWindow("HSV");
-        cv::imshow("HSV",hsv);
+        //cv::namedWindow("HSV");
+        //cv::imshow("HSV",hsv);
 
         //show blurred
-        cv::namedWindow("blurred");
-        cv::imshow("blurred",blurred);
+       // cv::namedWindow("blurred");
+        //cv::imshow("blurred",blurred);
 
         //show filtered
         cv::namedWindow("filtered");
@@ -76,7 +109,17 @@ int main(){
         cv::namedWindow("end");
         cv::imshow("end",done);
 
+
+
+        cv::namedWindow("thresh");
+        cv::imshow("thresh",thresh);
+        /*cv::imwrite("/home/chinmaya/Desktop/thresh.jpg",thresh);
+        cv::imwrite("/home/chinmaya/Desktop/src.jpg",src);
+        cv::imwrite("/home/chinmaya/Desktop/filtered.jpg",filtered);
+        cv::imwrite("/home/chinmaya/Desktop/done.jpg",done);*/
+        //cv::imwrite("/home/chinmaya/Desktop/cont.jpg",cont);
         cv::waitKey(30);
+
     }
 
     return 0;
@@ -143,11 +186,14 @@ static void onMouse( int event, int x, int y, int f, void* ){
 
 
 int main(){
- src = imread("/home/chinmaya/Desktop/balls2.jpg",1);
- cv::resize(src,src,cv::Size(720,1080));
+cv::VideoCapture cap(1);
+for(;;){
+ //src = imread("/home/chinmaya/Desktop/balls2.jpg",1);
+ cap>>src;
+ //cv::resize(src,src,cv::Size(720,1080));
  imshow(window_name,src);
  setMouseCallback( window_name, onMouse, 0 );
- waitKey();
+ waitKey(20);
  }
+}*/
 
-*/
